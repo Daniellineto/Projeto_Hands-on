@@ -1,0 +1,150 @@
+# ==========================================
+# Diretórios
+# ==========================================
+RTL_DIR   = rtl
+SIM_DIR   = tb
+SYNTH_DIR = syn
+REP_DIR   = $(SYNTH_DIR)/reports
+FM_DIR    = formal
+FM_REP_DIR= $(FM_DIR)/reports
+
+# ===========================================
+# Arquivos
+# ===========================================
+PKG_FILES = 
+
+RTL_FILES = $(RTL_DIR)/dummy_aes.sv
+
+TB_FILES = $(SIM_DIR)/tb_dummy_aes.sv
+
+# ==========================================
+# Top do testbench
+# ==========================================
+TOP = tb_dummy_aes
+
+# ==========================================
+# Flags
+# ==========================================
+TIMESCALE = 1ns/1ps
+
+VLOGAN_FLAGS = -full64 \
+               -sverilog \
+               -kdb \
+               -timescale=$(TIMESCALE) \
+               +lint=all
+
+VCS_FLAGS = -full64 \
+            -timescale=$(TIMESCALE) \
+            -debug_access+all \
+            -kdb
+
+# ==========================================
+# Verificação de sintaxe
+# ==========================================
+syntax:
+	vlogan $(VLOGAN_FLAGS) \
+		$(PKG_FILES) \
+		$(RTL_FILES) \
+		$(TB_FILES)
+
+# ==========================================
+# Compilação / Elaboração
+# ==========================================
+compile: syntax
+	vcs $(VCS_FLAGS) -top $(TOP)
+
+# ==========================================
+# Simulação
+# ==========================================
+run: compile
+	./simv
+
+# ==========================================
+# Abrir waveform
+# ==========================================
+wave:
+	verdi -ssf waves.fsdb &
+
+# ==========================================
+# Síntese
+# ==========================================
+synth:
+	mkdir -p $(REP_DIR)
+	cd $(SYNTH_DIR) && dc_shell -f synth_file.tcl
+
+# ==========================================
+# Equivalência Formal (Formality)
+# ==========================================
+formal:
+	mkdir -p $(FM_REP_DIR)
+	cd $(FM_DIR) && fm_shell -f formality.tcl
+
+# ==========================================
+# Equivalência Formal do Submódulo (unit_control)
+# ==========================================
+verify_sub:
+	cd $(FM_DIR) && fm_shell -f formality_submodules.tcl
+
+# ==========================================
+# Limpeza da síntese
+# ==========================================
+clean_synth:
+	rm -rf \
+		$(SYNTH_DIR)/*.ddc \
+		$(SYNTH_DIR)/alib-52 \
+		$(REP_DIR)/*.svf \
+		$(SYNTH_DIR)/command.log \
+		$(SYNTH_DIR)/work* \
+		$(REP_DIR)/*.rpt \
+		$(SYNTH_DIR)/*.db \
+		$(SYNTH_DIR)/*_syn.v \
+		$(SYNTH_DIR)/*.syn \
+		$(SYNTH_DIR)/*.pvl \
+		$(SYNTH_DIR)/*.pvk \
+		$(SYNTH_DIR)/*.mr \
+		$(SYNTH_DIR)/cksum_dir \
+		$(SYNTH_DIR)/*.svn
+
+# ==========================================
+# Limpeza da simulação
+# ==========================================
+clean_sim:
+	rm -rf \
+		csrc \
+		simv* \
+		*.daidir \
+		novas* \
+		AN.DB \
+		ucli.key \
+		verdi* \
+		DVEfiles \
+		.vlogan* \
+		*.fsdb \
+		*.log \
+		*.vpd \
+		*.vcd 
+
+# ==========================================
+# Limpeza do Formality
+# ==========================================
+clean_fm:
+	rm -rf \
+		$(FM_REP_DIR)/* \
+		$(FM_DIR)/*.log \
+		$(FM_DIR)/formality*_svf \
+		$(FM_DIR)/*.txt \
+		$(FM_DIR)/FM_WORK* \
+		$(FM_DIR)/FM_INFO* \
+		$(FM_DIR)/*.lck \
+		FM_INFO* \
+		formality_svf* \
+		*.lck \
+		fm_shell_command.log \
+		formality.log
+
+# ==========================================
+# Limpeza total
+# ==========================================
+clean: clean_sim clean_synth clean_fm
+
+.PHONY: syntax compile run wave synth formal clean clean_sim clean_synth clean_fm
