@@ -13,14 +13,16 @@ FM_REP_DIR= $(FM_DIR)/reports
 # ===========================================
 PKG_FILES = 
 
-RTL_FILES = $(RTL_DIR)/dummy_aes.sv
+RTL_FILES = $(RTL_DIR)/minisoc_aes/minisoc_aes_sbox.sv \
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_sub_bytes.sv \
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_shift_rows.sv
 
-TB_FILES = $(SIM_DIR)/tb_dummy_aes.sv
+TB_FILES = $(SIM_DIR)/tb_minisoc_aes_sub_shift.sv
 
 # ==========================================
 # Top do testbench
 # ==========================================
-TOP = tb_dummy_aes
+TOP = tb_minisoc_aes_sub_shift
 
 # ==========================================
 # Flags
