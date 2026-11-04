@@ -1,39 +1,54 @@
 # ============================================================
-# Script de Síntese - Template
+# Script de Síntese - Synopsys Design Compiler
 # ============================================================
 
-# Nome do módulo top-level (Preencha depois)
-set DESIGN_NAME ""
+# 1. Nome do módulo top-level a sintetizar
+# Pode ser: minisoc_aes_sub_bytes, minisoc_aes_shift_rows, minisoc_aes_sbox
+set DESIGN_NAME "minisoc_aes_sub_bytes"
+
+# Garantir existência do diretório de relatórios
+file mkdir reports
 
 # ------------------------------------------------------------
-# Carregar configuração 
+# 2. Carregar bibliotecas e search path
 # ------------------------------------------------------------
-set search_path [list . ../libs]
+set search_path [list . .. ../libs]
 set target_library "saed32rvt_tt1v25c.db"
 set link_library "* $target_library"
 
 # ------------------------------------------------------------
-# Ler RTL
+# 3. Ler e Analisar arquivos RTL (SystemVerilog)
 # ------------------------------------------------------------
-# Altere para apontar os arquivos .sv específicos ou a pasta toda
-analyze -format sverilog ../rtl/
+# O comando analyze requer arquivos explicitamente (não apenas o diretório)
+set RTL_FILES [list \
+    ../rtl/minisoc_aes/minisoc_aes_sbox.sv \
+    ../rtl/minisoc_aes/minisoc_aes_sub_bytes.sv \
+    ../rtl/minisoc_aes/minisoc_aes_shift_rows.sv \
+]
+
+analyze -format sverilog $RTL_FILES
 
 # ------------------------------------------------------------
-# Elaborar
+# 4. Elaborar o módulo e vincular
 # ------------------------------------------------------------
-if {$DESIGN_NAME != ""} {
-    elaborate $DESIGN_NAME
-}
-
+elaborate $DESIGN_NAME
+current_design $DESIGN_NAME
 link
 
 # ------------------------------------------------------------
-# Constraints
+# 5. Restrições Temporais (SDC / Constraints)
 # ------------------------------------------------------------
-# read_sdc ${DESIGN_NAME}.sdc
+if {[file exists "${DESIGN_NAME}.sdc"]} {
+    read_sdc "${DESIGN_NAME}.sdc"
+} elseif {[file exists "minisoc_top.sdc"]} {
+    read_sdc "minisoc_top.sdc"
+} else {
+    # Para blocos puramente combinacionais da Semana 2, cria restrição de max_delay
+    set_max_delay 2.0 -from [all_inputs] -to [all_outputs]
+}
 
 # ------------------------------------------------------------
-# Verificação do design
+# 6. Verificação e Relatórios Pré-Síntese
 # ------------------------------------------------------------
 puts "\n=================================================="
 puts "CHECK DESIGN"
@@ -42,10 +57,6 @@ puts "=================================================="
 redirect reports/check_design.rpt {
     check_design
 }
-
-# ------------------------------------------------------------
-# Relatórios pré-síntese
-# ------------------------------------------------------------
 
 redirect reports/area_pre.rpt {
     report_area -hierarchy
@@ -56,29 +67,29 @@ redirect reports/timing_pre.rpt {
 }
 
 # ------------------------------------------------------------
-# Síntese
+# 7. Síntese Lógica (Compile Ultra)
 # ------------------------------------------------------------
 puts "\n=================================================="
 puts "INICIANDO SÍNTESE (COMPILE ULTRA)"
 puts "=================================================="
 
-set_svf reports/default.svf
-compile_ultra 
+set_svf reports/${DESIGN_NAME}.svf
 
-#-------------------------------------------------------------
-# Relatórios pós-síntese
+compile_ultra
+
 # ------------------------------------------------------------
-
+# 8. Relatórios Pós-Síntese
+# ------------------------------------------------------------
 redirect reports/report_area.rpt {
-    report_area
+    report_area -hierarchy
 }
 
 redirect reports/report_timing.rpt {
-    report_timing
+    report_timing -max_paths 10
 }
 
 redirect reports/report_power.rpt {
-    report_power
+    report_power -hierarchy
 }
 
 redirect reports/report_constraint.rpt {
@@ -86,28 +97,14 @@ redirect reports/report_constraint.rpt {
 }
 
 # ------------------------------------------------------------
-# Exportar netlist
+# 9. Exportar Netlist e DDC
 # ------------------------------------------------------------
-
-if {$DESIGN_NAME != ""} {
-    write -format verilog -hierarchy -output ${DESIGN_NAME}_syn.v
-    write -format ddc -hierarchy -output ${DESIGN_NAME}_syn.ddc
-    write_file -format ddc -hierarchy -output ${DESIGN_NAME}.ddc
-}
+write -format verilog -hierarchy -output ${DESIGN_NAME}_syn.v
+write -format ddc -hierarchy -output ${DESIGN_NAME}_syn.ddc
 
 puts "\n=================================================="
-puts "SÍNTESE CONCLUÍDA"
+puts "SÍNTESE CONCLUÍDA COM SUCESSO"
 puts "=================================================="
-puts "Arquivos gerados na pasta reports/ :"
-puts "  reports/check_design.rpt"
-puts "  reports/area_pre.rpt"
-puts "  reports/timing_pre.rpt"
-puts "  reports/report_area.rpt"
-puts "  reports/report_timing.rpt"
-puts "  reports/report_power.rpt"
-puts "  reports/report_constraint.rpt"
-puts "Arquivos gerados na pasta syn/ :"
-puts "  ${DESIGN_NAME}_syn.v"
-puts "  ${DESIGN_NAME}_syn.ddc"
-puts "  ${DESIGN_NAME}.ddc"
+puts "Netlist gerada: syn/${DESIGN_NAME}_syn.v"
+puts "Relatórios salvos em: syn/reports/"
 puts "=================================================="
