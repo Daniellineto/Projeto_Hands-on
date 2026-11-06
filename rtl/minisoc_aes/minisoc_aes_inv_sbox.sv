@@ -149,7 +149,7 @@ module minisoc_aes_inv_sbox (
             8'h78: data_o = 8'hc1;
             8'h79: data_o = 8'haf;
             8'h7a: data_o = 8'hbd;
-            8'h7b: data_o = 8'h21;
+            8'h7b: data_o = 8'h03;
             8'h7c: data_o = 8'h01;
             8'h7d: data_o = 8'h13;
             8'h7e: data_o = 8'h8a;
@@ -163,7 +163,7 @@ module minisoc_aes_inv_sbox (
             8'h84: data_o = 8'h4f;
             8'h85: data_o = 8'h67;
             8'h86: data_o = 8'hdc;
-            8'h87: data_o = 8'h17;
+            8'h87: data_o = 8'hea;
             8'h88: data_o = 8'h97;
             8'h89: data_o = 8'hf2;
             8'h8a: data_o = 8'hcf;
