@@ -3,8 +3,10 @@
 # ============================================================
 
 # 1. Nome do módulo top-level a sintetizar
-# Pode ser: minisoc_aes_sub_bytes, minisoc_aes_shift_rows, minisoc_aes_sbox
-set DESIGN_NAME "minisoc_aes_sub_bytes"
+# Pode ser: minisoc_aes_sub_bytes, minisoc_aes_shift_rows, minisoc_aes_mix_columns,
+#           minisoc_aes_add_round_key, minisoc_aes_inv_sub_bytes,
+#           minisoc_aes_inv_shift_rows, minisoc_aes_inv_mix_columns
+set DESIGN_NAME "minisoc_aes_mix_columns"
 
 # Garantir existência do diretório de relatórios
 file mkdir reports
@@ -19,11 +21,16 @@ set link_library "* $target_library"
 # ------------------------------------------------------------
 # 3. Ler e Analisar arquivos RTL (SystemVerilog)
 # ------------------------------------------------------------
-# O comando analyze requer arquivos explicitamente (não apenas o diretório)
 set RTL_FILES [list \
     ../rtl/minisoc_aes/minisoc_aes_sbox.sv \
     ../rtl/minisoc_aes/minisoc_aes_sub_bytes.sv \
     ../rtl/minisoc_aes/minisoc_aes_shift_rows.sv \
+    ../rtl/minisoc_aes/minisoc_aes_mix_columns.sv \
+    ../rtl/minisoc_aes/minisoc_aes_add_round_key.sv \
+    ../rtl/minisoc_aes/minisoc_aes_inv_sbox.sv \
+    ../rtl/minisoc_aes/minisoc_aes_inv_sub_bytes.sv \
+    ../rtl/minisoc_aes/minisoc_aes_inv_shift_rows.sv \
+    ../rtl/minisoc_aes/minisoc_aes_inv_mix_columns.sv \
 ]
 
 analyze -format sverilog $RTL_FILES
@@ -43,7 +50,6 @@ if {[file exists "${DESIGN_NAME}.sdc"]} {
 } elseif {[file exists "minisoc_top.sdc"]} {
     read_sdc "minisoc_top.sdc"
 } else {
-    # Para blocos puramente combinacionais da Semana 2, cria restrição de max_delay
     set_max_delay 2.0 -from [all_inputs] -to [all_outputs]
 }
 
