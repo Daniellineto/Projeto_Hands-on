@@ -401,8 +401,8 @@ module tb_minisoc_aes_sub_shift;
 
             // Verify both direct LUT lookup and bijective property inv_sbox(sbox(x)) == x
             if (inv_sbox_out !== 8'(i) || INV_SBOX_REF[sbox_out] !== 8'(i)) begin
-                $display("  [FAIL] inv_sbox(8'h%02h) = 8'h%02h | Exp: 8'h%02h",
-                         inv_sbox_in, inv_sbox_out, 8'(i));
+                $display("  [FAIL] inv_sbox(8'h%02h) = 8'h%02h | INV_SBOX_REF = 8'h%02h | Exp: 8'h%02h",
+                         inv_sbox_in, inv_sbox_out, INV_SBOX_REF[sbox_out], 8'(i));
                 err_cnt++;
             end else begin
                 inv_sbox_pass_cnt++;
