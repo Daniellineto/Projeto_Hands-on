@@ -71,7 +71,7 @@ run: compile
 # Abrir waveform
 # ==========================================
 wave:
-	verdi -ssf waves.fsdb &
+	verdi -dbdir simv.daidir -ssf waves.fsdb -play verdicmd/verdi.cmd &
 
 # ==========================================
 # Síntese
@@ -124,7 +124,8 @@ clean_sim:
 		novas* \
 		AN.DB \
 		ucli.key \
-		verdi* \
+		verdiLog/*.log \
+		verdiLog/*.bak \
 		DVEfiles \
 		.vlogan* \
 		*.fsdb \
