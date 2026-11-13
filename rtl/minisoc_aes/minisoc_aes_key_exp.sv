@@ -114,6 +114,8 @@ module minisoc_aes_key_exp (
                 end else begin
                     round_cnt_q <= round_cnt_q + 4'd1;
                 end
+            end else begin
+                done_q <= 1'b0;
             end
         end
     end

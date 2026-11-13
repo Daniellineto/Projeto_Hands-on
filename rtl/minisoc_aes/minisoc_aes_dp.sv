@@ -145,6 +145,8 @@ module minisoc_aes_dp (
                 end else begin
                     round_q <= round_q + 4'd1;
                 end
+            end else begin
+                done_q <= 1'b0;
             end
         end
     end

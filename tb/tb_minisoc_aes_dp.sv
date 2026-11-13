@@ -131,6 +131,7 @@ module tb_minisoc_aes_dp;
         key_exp_start <= 1'b1;
         @(posedge clk);
         key_exp_start <= 1'b0;
+        #1;
         wait (key_exp_done == 1'b1);
         @(posedge clk);
     endtask
@@ -146,6 +147,7 @@ module tb_minisoc_aes_dp;
         dp_start    <= 1'b1;
         @(posedge clk);
         dp_start    <= 1'b0;
+        #1;
         wait (dp_done == 1'b1);
         #1;
         blk_out = dp_block_out;
