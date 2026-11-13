@@ -85,16 +85,16 @@ wave:
 # Atalhos convenientes Semana 3 / Semana 4
 # ==========================================
 run_w03:
-	$(MAKE) run TOP=tb_minisoc_aes_sub_shift
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) run TOP=tb_minisoc_aes_sub_shift
 
 wave_w03:
-	$(MAKE) wave TOP=tb_minisoc_aes_sub_shift
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) wave TOP=tb_minisoc_aes_sub_shift
 
 run_w04:
-	$(MAKE) run TOP=tb_minisoc_aes_dp
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) run TOP=tb_minisoc_aes_dp
 
 wave_w04:
-	$(MAKE) wave TOP=tb_minisoc_aes_dp
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) wave TOP=tb_minisoc_aes_dp
 
 # ==========================================
 # Síntese
