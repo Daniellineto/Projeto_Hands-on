@@ -3,10 +3,9 @@
 # ============================================================
 
 # 1. Nome do módulo top-level a sintetizar
-# Pode ser: minisoc_aes_sub_bytes, minisoc_aes_shift_rows, minisoc_aes_mix_columns,
-#           minisoc_aes_add_round_key, minisoc_aes_inv_sub_bytes,
-#           minisoc_aes_inv_shift_rows, minisoc_aes_inv_mix_columns
-set DESIGN_NAME "minisoc_aes_mix_columns"
+# Pode ser: minisoc_aes_dp, minisoc_aes_key_exp, minisoc_aes_sub_bytes,
+#           minisoc_aes_shift_rows, minisoc_aes_mix_columns, etc.
+set DESIGN_NAME "minisoc_aes_dp"
 
 # Garantir existência do diretório de relatórios
 file mkdir reports
@@ -31,6 +30,8 @@ set RTL_FILES [list \
     ../rtl/minisoc_aes/minisoc_aes_inv_sub_bytes.sv \
     ../rtl/minisoc_aes/minisoc_aes_inv_shift_rows.sv \
     ../rtl/minisoc_aes/minisoc_aes_inv_mix_columns.sv \
+    ../rtl/minisoc_aes/minisoc_aes_key_exp.sv \
+    ../rtl/minisoc_aes/minisoc_aes_dp.sv \
 ]
 
 analyze -format sverilog $RTL_FILES

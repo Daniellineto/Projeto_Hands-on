@@ -21,14 +21,22 @@ RTL_FILES = $(RTL_DIR)/minisoc_aes/minisoc_aes_sbox.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_sbox.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_sub_bytes.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_shift_rows.sv \
-            $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_mix_columns.sv
-
-TB_FILES = $(SIM_DIR)/tb_minisoc_aes_sub_shift.sv
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_mix_columns.sv \
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_key_exp.sv \
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_dp.sv
 
 # ==========================================
-# Top do testbench
+# Top do testbench e Seleção de Arquivos
 # ==========================================
-TOP = tb_minisoc_aes_sub_shift
+TOP ?= tb_minisoc_aes_dp
+
+ifeq ($(TOP), tb_minisoc_aes_sub_shift)
+    TB_FILES  = $(SIM_DIR)/tb_minisoc_aes_sub_shift.sv
+    VERDI_CMD = verdicmd/verdi_w03.cmd
+else
+    TB_FILES  = $(SIM_DIR)/tb_minisoc_aes_dp.sv
+    VERDI_CMD = verdicmd/verdi_w04.cmd
+endif
 
 # ==========================================
 # Flags
@@ -71,7 +79,22 @@ run: compile
 # Abrir waveform
 # ==========================================
 wave:
-	verdi -dbdir simv.daidir -ssf waves.fsdb -play verdicmd/verdi.cmd &
+	verdi -dbdir simv.daidir -ssf waves.fsdb -play $(VERDI_CMD) &
+
+# ==========================================
+# Atalhos convenientes Semana 3 / Semana 4
+# ==========================================
+run_w03:
+	$(MAKE) run TOP=tb_minisoc_aes_sub_shift
+
+wave_w03:
+	$(MAKE) wave TOP=tb_minisoc_aes_sub_shift
+
+run_w04:
+	$(MAKE) run TOP=tb_minisoc_aes_dp
+
+wave_w04:
+	$(MAKE) wave TOP=tb_minisoc_aes_dp
 
 # ==========================================
 # Síntese
@@ -156,4 +179,4 @@ clean_fm:
 # ==========================================
 clean: clean_sim clean_synth clean_fm
 
-.PHONY: syntax compile run wave synth formal clean clean_sim clean_synth clean_fm
+.PHONY: syntax compile run wave run_w03 wave_w03 run_w04 wave_w04 synth formal clean clean_sim clean_synth clean_fm
