@@ -51,6 +51,35 @@ module tb_minisoc_aes_dp;
     assign key_round_sel = tb_key_chk_en ? tb_round_sel : dp_round_sel;
 
     // --------------------------------------------------------------------------
+    // Sinais com nomes praticos para visualizacao no Verdi (nWave)
+    // --------------------------------------------------------------------------
+    logic         chave_start;
+    logic [127:0] chave_mestra;
+    logic [3:0]   chave_indice;
+    logic [127:0] subchave_atual;
+    logic         chave_pronta;
+
+    logic         aes_start;
+    logic         modo_decrypt;
+    logic [127:0] bloco_entrada;
+    logic [127:0] bloco_saida;
+    logic         aes_ocupado;
+    logic         aes_pronto;
+
+    assign chave_start    = key_exp_start;
+    assign chave_mestra   = key_in;
+    assign chave_indice   = key_round_sel;
+    assign subchave_atual = round_key_bus;
+    assign chave_pronta   = key_exp_done;
+
+    assign aes_start      = dp_start;
+    assign modo_decrypt   = dp_decrypt;
+    assign bloco_entrada  = dp_block_in;
+    assign bloco_saida    = dp_block_out;
+    assign aes_ocupado    = dp_busy;
+    assign aes_pronto     = dp_done;
+
+    // --------------------------------------------------------------------------
     // DUT Instantiations
     // --------------------------------------------------------------------------
     minisoc_aes_key_exp u_dut_key_exp (
