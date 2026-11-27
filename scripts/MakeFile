@@ -143,11 +143,27 @@ lint_w06:
 		$(SIM_DIR)/tb_minisoc_aes_top.sv | tee lint_w06.log
 
 # ==========================================
-# Síntese
+# Síntese (Design Compiler)
 # ==========================================
+SYNTH_TOP ?= minisoc_aes_top
+
 synth:
 	mkdir -p $(REP_DIR)
-	cd $(SYNTH_DIR) && dc_shell -f synth_file.tcl
+	cd $(SYNTH_DIR) && SYNTH_TOP=$(SYNTH_TOP) dc_shell -f synth_file.tcl
+
+synth_aes_dp:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) synth SYNTH_TOP=minisoc_aes_dp
+
+synth_key_exp:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) synth SYNTH_TOP=minisoc_aes_key_exp
+
+synth_spi:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) synth SYNTH_TOP=minisoc_spi
+
+synth_aes_top:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) synth SYNTH_TOP=minisoc_aes_top
+
+synth_all: synth_spi synth_aes_dp synth_aes_top
 
 # ==========================================
 # Equivalência Formal (Formality)
@@ -225,4 +241,4 @@ clean_fm:
 # ==========================================
 clean: clean_sim clean_synth clean_fm
 
-.PHONY: syntax compile run wave run_w03 wave_w03 run_w04 wave_w04 run_w05 wave_w05 lint_w05 run_w06 wave_w06 lint_w06 synth formal clean clean_sim clean_synth clean_fm
+.PHONY: syntax compile run wave run_w03 wave_w03 run_w04 wave_w04 run_w05 wave_w05 lint_w05 run_w06 wave_w06 lint_w06 synth synth_aes_dp synth_key_exp synth_spi synth_aes_top synth_all formal clean clean_sim clean_synth clean_fm
