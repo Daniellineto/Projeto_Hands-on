@@ -53,16 +53,18 @@
 
 ---
 
-## 3. Casos de Teste e Comandos de Execução
+## 3. Resultados da Simulação no Synopsys VCS (`tb_minisoc_aes_top.sv`)
 
-| Caso de Teste | Modo / Configuração | Quantidade de Blocos | Escopo Verificado na SRAM (1024 $\times$ 32) |
-| :--- | :---: | :---: | :--- |
-| **TEST 1 — Arbitragem de Memória** | `MEM_SEL_AES = 0/1` | 1 bloco (4 palavras) | Bloqueio de escrita externa quando `MEM_SEL_AES = 1` |
-| **TEST 2A / 2B / 2C — Modo ECB** | `MODE = 3'b000` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_ECB_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` + `DONE` *sticky* + `BLOCKS_DONE` |
-| **TEST 3A / 3B / 3C — Modo CBC** | `MODE = 3'b001` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_CBC_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` + encadeamento de `IV` |
-| **TEST 4A / 4B / 4C — Modo CTR** | `MODE = 3'b101` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_CTR_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` (`IV ^ zero_ext(CTR++)`) |
-| **TEST 5 — Configurações Inválidas** | `NUM_BLOCKS = 0, 257, 0xFFFFFFFF`<br>`MODE = 110, 111, 010, 011, 100` | — | `ERROR = 1`, `BUSY = 0`, `DONE = 0`, `BLOCKS_DONE = 0` e bloco sentinela na SRAM preservado sem alteração |
-| **TEST 6 — Recuperação Pós-Erro** | `MODE = 3'b000`, `NUM_BLOCKS = 1` | 1 bloco | Limpeza de `ERROR = 0` e conclusão normal no próximo `START` válido |
+A simulação no Synopsys VCS encerrou em `194201000 ps` (`194,201 µs`) com **0 erros e 60/60 verificações aprovadas (`OVERALL RESULT: PASS`)**:
+
+| Caso de Teste | Modo / Configuração | Quantidade de Blocos | Escopo Verificado na SRAM (1024 $\times$ 32) | Resultado |
+| :--- | :---: | :---: | :--- | :---: |
+| **TEST 1 — Arbitragem de Memória** | `MEM_SEL_AES = 0/1` | 1 bloco (4 palavras) | Bloqueio de escrita externa quando `MEM_SEL_AES = 1` | **PASS (1/1)** |
+| **TEST 2 — Modo ECB** | `MODE = 3'b000` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_ECB_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` + `DONE` *sticky* + `BLOCKS_DONE = 1, 2, 256` | **PASS (15/15)** |
+| **TEST 3 — Modo CBC** | `MODE = 3'b001` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_CBC_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` + encadeamento de `IV` + `BLOCKS_DONE = 1, 2, 256` | **PASS (15/15)** |
+| **TEST 4 — Modo CTR** | `MODE = 3'b101` (`ENC` + `DEC`) | **1, 2 e 256 blocos** | Cifragem *in-place* vs `REF_CTR_CT_BLOCKS` + Decriptação *in-place* vs `REF_PT_BLOCKS` (`IV ^ zero_ext(CTR++)`) + `BLOCKS_DONE = 1, 2, 256` | **PASS (15/15)** |
+| **TEST 5 — Configurações Inválidas** | `NUM_BLOCKS = 0, 257, 0xFFFFFFFF`<br>`MODE = 110, 111, 010, 011, 100` | — | `ERROR = 1`, `BUSY = 0`, `DONE = 0`, `BLOCKS_DONE = 0` e bloco sentinela na SRAM preservado sem alteração | **PASS (9/9)** |
+| **TEST 6 — Recuperação Pós-Erro** | `MODE = 3'b000`, `NUM_BLOCKS = 1` | 1 bloco | Limpeza de `ERROR = 0` e conclusão normal (`ENC` + `DEC`) no próximo `START` válido | **PASS (5/5)** |
 
 **Comandos para execução no servidor Synopsys (VCS / Verdi):**
 
