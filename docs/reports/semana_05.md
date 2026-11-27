@@ -39,42 +39,40 @@
 
 ---
 
-## 2. Plano de Verificação e Casos de Teste (`tb_minisoc_spi_pll.sv`)
+## 2. Resultados da Simulação (`tb_minisoc_spi_pll.sv` — Synopsys VCS)
 
-| Caso de Teste | Escopo Verificado | Critério de Aceite Atendido |
-| :--- | :--- | :--- |
-| **TEST 1 — Estado de Reset e PLL Desabilitado** | Leitura via SPI de `VERSION` (`32'h0001_0000`), `SYSTEM_STATUS` (`PLL_LOCKED = 0`), `SYSTEM_CONTROL` e `AES_CONTROL`; confirmação de 0 bordas em `sys_clk` | Reset determinístico e `REQ-PLL-01` |
-| **TEST 2 — Escrita e Leitura de Todos os Registradores R/W** | Escrita (1 transação) e leitura (2 transações com `NOP 0x3F`) de `KEY0..KEY3`, `IV0..IV3`, `COUNTER_HI/LO`, `NUM_BLOCKS`, `AES_CONTROL` (incluindo máscara de bits reservados e pulso único de 1 ciclo em `START` W1P) e `SYSTEM_CONTROL` | Todos os registradores R/W escritos e lidos via SPI |
-| **TEST 3 — Proteção dos Registradores Somente Leitura (R)** | Tentativa de escrita via SPI em `AES_STATUS`, `VERSION`, `SYSTEM_STATUS`, `NOP (0x3F)` e endereço não mapeado (`0x2A`), verificando preservação dos valores e integridade de `KEY0` | Registradores R não alterados por escrita |
-| **TEST 4 — Habilitação e Lock do PLL (Passos 8 e 9, Seção 9)** | Para os quatro divisores (`/1`, `/2`, `/4`, `/8`): bloqueio de `sys_clk` enquanto desabilitado, programação de `PLL_DIV_SEL` + `PLL_ENABLE = 1` via SPI, *polling* de `SYSTEM_STATUS` até `PLL_LOCKED = 1`, conferência de latência pseudoaleatória, medição exata do período (`0,5 / 1,0 / 2,0 / 4,0 ns`), troca dinâmica `/8` $\rightarrow$ `/2`, desabilitação final e monitor global contínuo de `REQ-PLL-01` | PLL travando nos quatro divisores sem *glitches* |
+A simulação no Synopsys VCS encerrou em `160913250 ps` (`160,91325 µs`) com **0 erros e 53/53 verificações aprovadas (`OVERALL RESULT: PASS`)**:
+
+| Caso de Teste | Escopo Verificado | Valores Obtidos na Simulação | Resultado |
+| :--- | :--- | :--- | :---: |
+| **TEST 1 — Estado de Reset e PLL Desabilitado** | Leitura via SPI de `VERSION` (`0x0D`), `SYSTEM_STATUS` (`0x0F`), `SYSTEM_CONTROL` (`0x0E`) e `AES_CONTROL` (`0x0B`); monitor de `sys_clk` | `VERSION = 32'h00010000`, demais `32'h00000000`, `0` bordas em `sys_clk` | **PASS (5/5)** |
+| **TEST 2 — Escrita e Leitura de Todos os Registradores R/W** | `KEY0..KEY3`, `IV0..IV3`, `COUNTER_HI/LO`, `NUM_BLOCKS`, `AES_CONTROL` (máscara + pulso `START` W1P de 1 ciclo e auto-limpeza) e `SYSTEM_CONTROL` | `cfg_key_o = 00010203..0c0d0e0f`, `cfg_iv_o = 10111213..1c1d1e1f`, `cfg_counter_o = deadbeefcafebabe`, `cfg_num_blocks_o = 256`, `AES_CONTROL = 32'h00000016` $\rightarrow$ `32'h00000008` (1 pulso W1P), `SYSTEM_CONTROL = 32'h0000000d` $\rightarrow$ `32'h00000000` | **PASS (22/22)** |
+| **TEST 3 — Proteção dos Registradores Somente Leitura (R)** | Leitura de `AES_STATUS` e tentativas de escrita em `AES_STATUS` (`0x0C`), `VERSION` (`0x0D`), `SYSTEM_STATUS` (`0x0F`), `NOP` (`0x3F`) e endereço não mapeado (`0x2A`) | `AES_STATUS = 32'h0000044b` (`BLOCKS_DONE=137`, `DONE=1`, `BUSY=1`), `VERSION = 32'h00010000`, `SYSTEM_STATUS = 32'h00000000`, `KEY0 = 32'h00010203` intactos após escritas | **PASS (5/5)** |
+| **TEST 4 — Habilitação e Lock do PLL (Passos 8 e 9, Seção 9)** | Habilitação via SPI, *polling* de `SYSTEM_STATUS` até `PLL_LOCKED = 1` e medição de período nos 4 divisores + troca dinâmica `/8` $\rightarrow$ `/2` + monitor global `REQ-PLL-01` | `/1`: `T = 0,500 ns` (lock em `72` ciclos)<br>`/2`: `T = 1,000 ns` (lock em `70` ciclos)<br>`/4`: `T = 2,000 ns` (lock em `41` ciclos)<br>`/8`: `T = 4,000 ns` (lock em `47` ciclos)<br>Troca dinâmica `/8` $\rightarrow$ `/2`: `T = 1,000 ns`<br>Monitor `REQ-PLL-01`: `0` bordas indevidas | **PASS (21/21)** |
 
 ---
 
-## 3. Relatório de Lint
+## 3. Relatório de Lint (`vlogan +lint=all`)
 
-### 3.1 Comando de Execução (`vlogan +lint=all`)
+### 3.1 Comando Executado e Resumo do Log (`Synopsys VCS X-2025.06-SP2_Full64`)
 
 ```bash
-# Executar lint dedicado da Semana 5 (gera lint_w05.log)
-make -f scripts/MakeFile lint_w05
-
-# Compilar com +lint=all e executar simulação da Semana 5
-make -f scripts/MakeFile run_w05
-
-# Abrir ondas no Synopsys Verdi com sinais pré-carregados
-make -f scripts/MakeFile wave_w05
+vlogan -full64 -sverilog -kdb -timescale=1ns/1ps +lint=all \
+	rtl/minisoc_spi/minisoc_spi.sv \
+	rtl/minisoc_pll/minisoc_pll_mock.sv \
+	tb/tb_minisoc_spi_pll.sv | tee lint_w05.log
 ```
 
-### 3.2 Análise Estática de Conformidade e Avisos Justificados
+| Arquivo Analisado | Erros | Warnings / Lint no RTL | Avisos de Lint (`+lint=all`) | Status |
+| :--- | :---: | :---: | :---: | :---: |
+| [`rtl/minisoc_spi/minisoc_spi.sv`](../../rtl/minisoc_spi/minisoc_spi.sv) | **0** | **0** | **0** | **LIMPO (100%)** |
+| [`rtl/minisoc_pll/minisoc_pll_mock.sv`](../../rtl/minisoc_pll/minisoc_pll_mock.sv) | **0** | **0** | **0** | **LIMPO (100%)** |
+| [`tb/tb_minisoc_spi_pll.sv`](../../tb/tb_minisoc_spi_pll.sv) | **0** | — | **14 `Lint-[NS]`** (*Null statement*, apenas no testbench) | **APROVADO (Justificado)** |
 
-| Módulo | Verificação Estática | Status Esperado (`vlogan +lint=all`) | Justificativa Técnica (para ferramentas estritas de CDC / Lint) |
-| :--- | :--- | :---: | :--- |
-| `minisoc_spi.sv` | Larguras de barramento, literais dimensionados, `case` com `default`, ausência de *latches* e *multi-drivers* | **0 erros / 0 warnings** | Todas as atribuições e concatenações têm largura exata; todos os registradores possuem reset explícito |
-| `minisoc_spi.sv` | Reset assíncrono combinado `spi_frame_rst_n = rst_ni & ~spi_cs_ni` para `rx_bit_cnt_q`, `rx_shift_q`, `tx_bit_cnt_q`, `tx_shift_q`, `spi_miso_q` | **Justificado (se reportado por lint de reset)** | Garante reinício limpo dos contadores de bit quando `spi_cs_ni` retorna ao repouso (`1`), enquanto `rx_frame_captured_q` e `rx_toggle_q` utilizam exclusivamente `rst_ni` para não perder o evento CDC |
-| `minisoc_spi.sv` | Bit reservado `rx_frame_captured_q[32]` (`RSV`) não consumido no banco de registradores | **Justificado (se reportado por lint de bit não utilizado)** | Conforme Seção 5.2 do *Block Guide*, o bit `32` do frame de 40 bits é reservado (`RSV = 0`) e ignorado pelo decodificador; mantido no registrador de 40 bits para fidelidade do frame e depuração em onda |
-| `minisoc_spi.sv` | Borda de descida `negedge spi_sclk_i` no caminho TX (`spi_miso_q`) | **Justificado (se reportado por lint de borda mista)** | Requisito explícito de protocolo SPI Mode 0 (Seção 5.1): MOSI amostrado em `posedge spi_sclk` e MISO atualizado em `negedge spi_sclk` |
-| `minisoc_spi.sv` | Leitura de `rd_data_clk_q` no domínio `spi_sclk_i` | **Justificado (CDC estático)** | O dado de leitura estabiliza em 3 ciclos de `clk_i` (1,5 ns) após a 1ª transação e permanece estático por $\ge 320\text{ ns}$ (8 ciclos de `spi_sclk` a 25 MHz) antes de ser carregado na 8ª borda de descida da 2ª transação |
-| `minisoc_pll_mock.sv` | *Clock gating* (`clk_i & clk_en_neg_q`), flip-flop em `negedge clk_i` e clock dividido em `div_cnt_q[0..2]` | **0 erros / Justificado (`LIM-PLL-01`)** | Conforme Seção 4.1 e `LIM-PLL-01`, `minisoc_pll_mock` é um modelo comportamental RTL para integração e verificação (não uma macro física de síntese). O uso de `clk_en_neg_q` evita inferência de *latch* e assegura transição livre de *glitches* em `/1` |
-| `tb_minisoc_spi_pll.sv` | Conexão de portas, tipos, monitoramento concorrente e chamadas de *tasks* | **0 erros / 0 warnings** | Todas as 21 portas de `minisoc_spi` e 6 portas de `minisoc_pll_mock` conectadas explicitamente por nome com largura exata |
+### 3.2 Justificativa Técnica dos Avisos `Lint-[NS]` e Decisões de Projeto
 
-> **Observação:** Os arquivos RTL, testbench e scripts foram verificados estaticamente (balanceamento de blocos, casamento exato de todas as portas/larguras, consistência de sinais do Verdi e tabulação do `MakeFile`). Execute `make -f scripts/MakeFile lint_w05` e `make -f scripts/MakeFile run_w05` no servidor Synopsys VCS/Verdi para anexar o `lint_w05.log` e os resultados finais de simulação.
+| Código / Escopo | Ocorrências (Linhas) | Descrição da Ferramenta | Justificativa Técnica |
+| :--- | :--- | :--- | :--- |
+| **`Lint-[NS]` (*Null statement*)** em `tb/tb_minisoc_spi_pll.sv` | Linhas `206`, `209`, `213`, `216` (`#(SPI_HALF_PERIOD);`), `259`, `261` (`repeat (N) @(posedge sys_clk);`), `266` (`#200.0;`), `303`, `305`, `329`, `469`, `512`, `604`, `636` (`repeat (N) @(posedge clk);`) | Na gramática IEEE 1800, um controle de atraso (`#d;`) ou controle de evento (`repeat(N) @(posedge clk);`) finalizado por ponto e vírgula sem comando associado na mesma instrução é interpretado pelo parser do `vlogan +lint=all` como um controle temporal aplicado a uma instrução nula (`;`). | **Totalmente benigno e restrito ao testbench (não sintetizável):** são esperas temporais intencionais do BFM mestre SPI (meio período de 20 ns do `spi_sclk` a 25 MHz) e esperas de ciclos de `clk`/`sys_clk` para sincronização de estímulos e *timeout*. **Os módulos RTL (`minisoc_spi.sv` e `minisoc_pll_mock.sv`) compilaram com 0 erros e 0 avisos.** |
+| **Reset de frame SPI (`spi_frame_rst_n`)** em `minisoc_spi.sv` | `spi_frame_rst_n = rst_ni & ~spi_cs_ni` | Nenhum aviso emitido pelo `vlogan +lint=all` (`0 warnings`). | Garante o zeramento imediato dos contadores de bit (`rx_bit_cnt_q`, `tx_bit_cnt_q`) ao final da transação (`spi_cs_ni = 1`), enquanto `rx_frame_captured_q` e `rx_toggle_q` são resetados exclusivamente por `rst_ni` para preservar o evento CDC. |
+| **Modelo de Integração PLL (`LIM-PLL-01`)** em `minisoc_pll_mock.sv` | `clk_en_neg_q` (`negedge clk_i`) e `div_cnt_q[2:0]` | Nenhum aviso emitido pelo `vlogan +lint=all` (`0 warnings`). | O uso de flip-flop na borda de descida (`clk_en_neg_q`) evita inferência de *latch* e garante *clock gating* livre de *glitches* para o divisor `/1` (2 GHz), cumprindo `REQ-PLL-01` e `LIM-PLL-01`. |
