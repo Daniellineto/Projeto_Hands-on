@@ -23,19 +23,24 @@ RTL_FILES = $(RTL_DIR)/minisoc_aes/minisoc_aes_sbox.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_shift_rows.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_inv_mix_columns.sv \
             $(RTL_DIR)/minisoc_aes/minisoc_aes_key_exp.sv \
-            $(RTL_DIR)/minisoc_aes/minisoc_aes_dp.sv
+            $(RTL_DIR)/minisoc_aes/minisoc_aes_dp.sv \
+            $(RTL_DIR)/minisoc_spi/minisoc_spi.sv \
+            $(RTL_DIR)/minisoc_pll/minisoc_pll_mock.sv
 
 # ==========================================
 # Top do testbench e Seleção de Arquivos
 # ==========================================
-TOP ?= tb_minisoc_aes_dp
+TOP ?= tb_minisoc_spi_pll
 
 ifeq ($(TOP), tb_minisoc_aes_sub_shift)
     TB_FILES  = $(SIM_DIR)/tb_minisoc_aes_sub_shift.sv
     VERDI_CMD = verdicmd/verdi_w03.cmd
-else
+else ifeq ($(TOP), tb_minisoc_aes_dp)
     TB_FILES  = $(SIM_DIR)/tb_minisoc_aes_dp.sv
     VERDI_CMD = verdicmd/verdi_w04.cmd
+else
+    TB_FILES  = $(SIM_DIR)/tb_minisoc_spi_pll.sv
+    VERDI_CMD = verdicmd/verdi_w05.cmd
 endif
 
 # ==========================================
@@ -82,7 +87,7 @@ wave:
 	verdi -dbdir simv.daidir -ssf waves.fsdb -play $(VERDI_CMD) &
 
 # ==========================================
-# Atalhos convenientes Semana 3 / Semana 4
+# Atalhos convenientes Semana 3 / Semana 4 / Semana 5
 # ==========================================
 run_w03:
 	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) run TOP=tb_minisoc_aes_sub_shift
@@ -95,6 +100,18 @@ run_w04:
 
 wave_w04:
 	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) wave TOP=tb_minisoc_aes_dp
+
+run_w05:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) run TOP=tb_minisoc_spi_pll
+
+wave_w05:
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) wave TOP=tb_minisoc_spi_pll
+
+lint_w05:
+	vlogan $(VLOGAN_FLAGS) \
+		$(RTL_DIR)/minisoc_spi/minisoc_spi.sv \
+		$(RTL_DIR)/minisoc_pll/minisoc_pll_mock.sv \
+		$(SIM_DIR)/tb_minisoc_spi_pll.sv | tee lint_w05.log
 
 # ==========================================
 # Síntese
@@ -179,4 +196,4 @@ clean_fm:
 # ==========================================
 clean: clean_sim clean_synth clean_fm
 
-.PHONY: syntax compile run wave run_w03 wave_w03 run_w04 wave_w04 synth formal clean clean_sim clean_synth clean_fm
+.PHONY: syntax compile run wave run_w03 wave_w03 run_w04 wave_w04 run_w05 wave_w05 lint_w05 synth formal clean clean_sim clean_synth clean_fm
